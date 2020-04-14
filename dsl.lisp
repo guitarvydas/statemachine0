@@ -18,21 +18,29 @@
 = machine
   SYMBOL/machine
   @machineName
+    machinePushNew
   @optional-initially
   @states
   SYMBOL/end SYMBOL/machine
-
+    machinePopClose
 
 = optional-initially
   [ ?SYMBOL/initially
      SYMBOL/initially
+     exprPushNewInitially
      @statemachine0Statements
+     machineSetInitially
+     exprPop
      SYMBOL/end SYMBOL/initially
   | *
   ]
 
 = states
-  {[ ?SYMBOL/state @state
+  {[ ?SYMBOL/state 
+     exprPushNewState 
+     @state 
+     machineAppendState 
+     exprPop
    | * >
   ]}
 
@@ -67,7 +75,9 @@
 
 = statemachine0SendStatement
   SYMBOL/send
+  codePushNewSend
   @statemachine0Expr
+  codeAppendExpr
 
 = optionalParameters
   [ ?'('   '(' @parameters ')'
@@ -75,13 +85,14 @@
   ]
 
 = parameters
-  {[ ?'$'   '$' @statemachine0expr
+  {[ ?'$'   '$' @statemachine0expr codeAppendExpr
    | ?')' >
-   | ?SYMBOL @statemachine0expr
+   | ?SYMBOL @statemachine0expr codeAppendExpr
   ]}
 
 = statemachine0Call
   SYMBOL
+  codePushNewCall
   @optionalParameters
 
 = pipeline
@@ -116,11 +127,20 @@
   exprPop
 ")
 
+(defclass machine ()
+  ((name :accessor name)
+   (intially-code :accessor initially-code :initform nil)
+   (states :accessor states :initform nil)))
+
 (defclass statemachine0Parser (pasm:parser)
-  ((exprStack :accessor exprStack)))
+  ((exprStack :accessor exprStack)
+   (machineStack :accessor machineStack)
+   (codeStack :accessor codeStack)))
 
 (defmethod initially ((self statemachine0Parser) token-list)
   (setf (exprStack self) nil)
+  (setf (machineStack self) nil)
+  (setf (codeStack self) nil)
   (call-next-method))
 
 ;; mechanisms
@@ -135,6 +155,25 @@
 (defmethod errorNoExpr ((self statemachine0Parser))
   (ptrace self)
   (pasm:pasm-parse-error self "expecting an EXPR"))
+
+(defmethod machinePushNew ((self statemachine0Parser))
+  (let ((m (make-instance 'machine)))
+    (setf (name m) (scanner:token-text (pasm:accepted-token self)))
+    (push m (machineStack self))))
+
+(defmethod machinePopClose ((self statemachine0Parser))
+  (let ((m (pop (machineStack self))))
+    (pasm:emit-string self "~&(defmachine ~a () ~a)~%" (name m) (pop (codeStack self)))))
+
+(defmethod codePushNewSend ((self statemachine0Parser))
+  (push '(send) (codeStack self)))
+
+(defmethod codePushNewCall ((self statemachine0Parser))
+  (push (list 'call (scanner:token-text (pasm:accepted-token self))) (codeStack self)))
+
+(defmethod codeAppendExpr ((self statemachine0Parser))
+  (setf (first (codeStack self)) (append (pop (codeStack self)) (list (pop (exprStack self))))))
+
 ;; end mechanisms
 
 (defun string-append (s1 s2)
