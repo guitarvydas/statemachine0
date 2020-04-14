@@ -1,0 +1,31 @@
+* intro
+  Simple V0 version of a state machine DSL.  See comments in test.lisp for details.
+* build
+#+name: dsl
+#+begin_src lisp :results output
+ (uiop:run-program "rm -rf ~/.cache/common-lisp ; rm -rf */*.fasl ; rm -rf */*~")
+ (ql:quickload :statemachine0)
+#+end_src
+
+#+name: dsl
+#+begin_src lisp :results output
+ (uiop:run-program "rm -rf ~/.cache/common-lisp ; rm -rf */*.fasl ; rm -rf */*~")
+ (ql:quickload :statemachine0/test)
+#+end_src
+
+#+name: dsl
+#+begin_src lisp :results output
+  (statemachine0::test)
+#+end_src
+
+#+RESULTS: dsl
+: To load "statemachine0/test":
+:   Load 1 ASDF system:
+:     statemachine0/test
+: ; Loading "statemachine0/test"
+: [package loops]...................................
+: [package alexandria.1.0.0]........................
+: [package scanner].................................
+: [package parsing-assembler].......................
+: [package statemachine0].
+
