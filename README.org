@@ -19,8 +19,13 @@
 #+end_src
 
 #+RESULTS: dsl
-: result0=t
-: (defmachine producer ())
-: (defmachine consumer ())
-: 
+: To load "statemachine0/test":
+:   Load 1 ASDF system:
+:     statemachine0/test
+: ; Loading "statemachine0/test"
+: [package loops]...................................
+: [package alexandria.1.0.0]........................
+: [package scanner].................................
+: [package parsing-assembler].......................
+: [package statemachine0].
 
